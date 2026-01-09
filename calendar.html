@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Kalender Visual Tempahan</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { font-family: 'Poppins', sans-serif; background: #f0f4f7; margin: 20px; }
+nav { text-align: center; margin-bottom: 20px; }
+nav a { text-decoration: none; color: white; background:#3498db; padding:10px 20px; border-radius:6px; margin:0 5px; }
+nav a:hover { background:#2980b9; }
+h2 { text-align: center; color: #2c3e50; }
+#kalender { display: grid; grid-template-columns: repeat(8, 1fr); grid-gap: 2px; }
+.kolum-header { background:#3498db; color:white; padding:5px; text-align:center; font-weight:bold; }
+.slot { border:1px solid #ccc; background:white; min-height:50px; position: relative; }
+.tempahan { position: absolute; top:2px; left:2px; right:2px; padding:2px; color:white; border-radius:4px; cursor:pointer; font-size:12px; text-align:center; }
+.tooltip { display:none; position:absolute; background:#333; color:white; padding:5px; border-radius:4px; font-size:12px; z-index:10; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Utama</a>
+  <a href="tempahan.html">🖋️ Buat Tempahan</a>
+  <a href="jadual.html">📖 Lihat Jadual</a>
+</nav>
+
+<h2>📅 Kalender Visual Tempahan Bilik Komputer - SK DATUK NANKAYA</h2>
+
+<div id="loading">Memuatkan tempahan...</div>
+<div id="kalender" style="display:none;"></div>
+
+<script>
+// URL Web App Google Apps Script
+const WEB_APP_URL = "https://script.google.com/a/macros/moe-dl.edu.my/s/AKfycbzcyjDkqsadLYYpX7BS30adEmy9fXEURUBHXp0PBUvXNpVfqjjxbk_07sTUG6w8cY6f/exec?action=dapatkan";
+
+// Tetapan waktu: 8am – 5pm
+const waktuMula = 8, waktuTamat = 17;
+
+// Warna ikut kelas / guru
+const warnaKelas = {
+  "6A": "#3498db",
+  "6B": "#2ecc71",
+  "6C": "#e67e22",
+  "Guru Lain": "#9b59b6"
+};
+
+function muatKalender() {
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("kalender").style.display = "none";
+
+  fetch(WEB_APP_URL)
+    .then(res => res.json())
+    .then(data => {
+      binaKalender(data);
+    })
+    .catch(err => {
+      document.getElementById("loading").innerText = "❌ Ralat: " + err;
+    });
+}
+
+function binaKalender(tempahan) {
+  const kalender = document.getElementById("kalender");
+  kalender.innerHTML = "";
+
+  // Header: Masa & 7 hari
+  kalender.innerHTML += `<div class="kolum-header">Masa</div>`;
+  for(let h=0; h<7; h++){
+    const tarikh = new Date();
+    tarikh.setDate(tarikh.getDate()+h);
+    kalender.innerHTML += `<div class="kolum-header">${tarikh.toLocaleDateString('ms-MY', { weekday:'short', day:'numeric', month:'short' })}</div>`;
+  }
+
+  // Slot jam
+  for(let jam=waktuMula; jam<waktuTamat; jam++){
+    kalender.innerHTML += `<div class="slot"><b>${jam}:00</b></div>`; // Kolum masa
+    for(let h=0; h<7; h++){
+      kalender.innerHTML += `<div class="slot" data-hari="${h}" data-jam="${jam}"></div>`;
+    }
+  }
+
+  // Masukkan tempahan
+  tempahan.forEach(item=>{
+    const tarikh = new Date(item.tarikh);
+    const hari = Math.floor((tarikh - new Date()) / (1000*60*60*24));
+    const jamMula = parseInt(item.masaMula.split(':')[0]);
+    const slot = document.querySelector(`.slot[data-hari='${hari}'][data-jam='${jamMula}']`);
+    if(slot){
+      const div = document.createElement('div');
+      div.className = 'tempahan';
+      div.style.backgroundColor = warnaKelas[item.kelas] || warnaKelas["Guru Lain"];
+      div.innerText = item.nama;
+      div.title = `${item.nama} (${item.kelas})\n${item.masaMula}-${item.masaTamat}\n${item.tujuan}\nBil. Murid: ${item.bilangan}`;
+      div.onclick = () => padamTempahan(item.nama, item.tarikh, item.masaMula);
+      slot.appendChild(div);
+    }
+  });
+
+  document.getElementById("loading").style.display = "none";
+  kalender.style.display = "grid";
+}
+
+// Padam tempahan
+function padamTempahan(nama, tarikh, masaMula) {
+  if(!confirm(`Padam tempahan ${nama} pada ${tarikh} jam ${masaMula}?`)) return;
+  fetch(WEB_APP_URL, {
+    method:"POST",
+    body: JSON.stringify({ aksi:"padam", nama:nama, tarikh:tarikh, masaMula:masaMula })
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    if(data.status==="berjaya"){
+      alert("✅ Tempahan berjaya dipadam!");
+      muatKalender();
+    }else{
+      alert("⚠️ Gagal padam: "+data.mesej);
+    }
+  })
+  .catch(err=>alert("❌ Ralat: "+err));
+}
+
+// Auto-load
+window.onload = muatKalender;
+</script>
+
+</body>
+</html>

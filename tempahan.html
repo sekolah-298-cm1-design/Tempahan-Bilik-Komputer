@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Borang Tempahan Bilik Komputer</title>
+<style>
+body { font-family: Poppins, sans-serif; margin: 40px; background:#f0f4f7; }
+nav { text-align: center; margin-bottom: 20px; }
+nav a { text-decoration: none; color: white; background:#3498db; padding:10px 20px; border-radius:6px; margin: 0 5px; }
+nav a:hover { background:#2980b9; }
+h2 { color:#2c3e50; text-align:center; }
+label { display:block; margin-top:15px; }
+input, select { width:100%; padding:8px; margin-top:5px; }
+button { margin-top:20px; padding:10px 20px; background:#3498db; color:white; border:none; cursor:pointer; }
+button:hover { background:#2980b9; }
+#mesej { margin-top:15px; font-weight:bold; text-align:center; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Utama</a>
+  <a href="jadual.html">📖 Lihat Jadual</a>
+</nav>
+
+<h2>🖥️ Borang Tempahan Bilik Komputer</h2>
+
+<form id="tempahanForm">
+  <label>Nama Guru</label>
+  <input type="text" id="nama" required>
+
+  <label>Kelas / Tahun</label>
+  <input type="text" id="kelas" required>
+
+  <label>Tarikh</label>
+  <input type="date" id="tarikh" required>
+
+  <label>Masa Mula</label>
+  <input type="time" id="masaMula" required>
+
+  <label>Masa Tamat</label>
+  <input type="time" id="masaTamat" required>
+
+  <label>Tujuan Penggunaan</label>
+  <input type="text" id="tujuan" required>
+
+  <label>Bilangan Murid</label>
+  <input type="number" id="bilangan" required>
+
+  <button type="submit">Hantar Tempahan</button>
+</form>
+
+<div id="mesej"></div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/a/macros/moe-dl.edu.my/s/AKfycbzcyjDkqsadLYYpX7BS30adEmy9fXEURUBHXp0PBUvXNpVfqjjxbk_07sTUG6w8cY6f/exec";
+
+document.getElementById("tempahanForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var data = {
+    nama: document.getElementById("nama").value,
+    kelas: document.getElementById("kelas").value,
+    tarikh: document.getElementById("tarikh").value,
+    masaMula: document.getElementById("masaMula").value,
+    masaTamat: document.getElementById("masaTamat").value,
+    tujuan: document.getElementById("tujuan").value,
+    bilangan: document.getElementById("bilangan").value
+  };
+
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(res => {
+    if(res.status == "berjaya"){
+      document.getElementById("mesej").innerText = "✅ Tempahan berjaya dihantar!";
+      document.getElementById("tempahanForm").reset();
+    } else {
+      document.getElementById("mesej").innerText = "⚠️ Gagal: " + res.mesej;
+    }
+  })
+  .catch(err => {
+    document.getElementById("mesej").innerText = "❌ Ralat: " + err;
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Jadual Tempahan Bilik Komputer</title>
+<style>
+body { font-family: 'Poppins', sans-serif; background-color: #f8faff; margin: 30px; }
+nav { text-align: center; margin-bottom: 20px; }
+nav a { text-decoration: none; color: white; background:#3498db; padding:10px 20px; border-radius:6px; margin: 0 5px; }
+nav a:hover { background:#2980b9; }
+h2 { text-align: center; color: #2c3e50; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+th { background-color: #3498db; color: white; }
+tr:nth-child(even) { background-color: #f2f6fc; }
+.status-tempah { background-color: #f8d7da; color: #721c24; padding: 5px; border-radius: 4px; }
+#loading { text-align: center; font-style: italic; color: #555; margin-top: 20px; }
+button { margin: 20px auto; display: block; background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+button:hover { background:#2980b9; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Utama</a>
+  <a href="tempahan.html">🖋️ Buat Tempahan</a>
+</nav>
+
+<h2>📅 Jadual Tempahan Bilik Komputer - SK DATUK NANKAYA</h2>
+
+<div id="loading">Memuatkan data tempahan...</div>
+
+<table id="jadual" style="display:none;">
+  <thead>
+    <tr>
+      <th>Nama Guru</th>
+      <th>Kelas / Tahun</th>
+      <th>Tarikh</th>
+      <th>Masa Mula</th>
+      <th>Masa Tamat</th>
+      <th>Tujuan</th>
+      <th>Bil. Murid</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="dataBody"></tbody>
+</table>
+
+<button onclick="muatSemula()">🔄 Muat Semula</button>
+
+<script>
+// Ganti dengan URL Web App sebenar yang cikgu deploy
+const WEB_APP_URL = "https://script.google.com/a/macros/moe-dl.edu.my/s/AKfycbzcyjDkqsadLYYpX7BS30adEmy9fXEURUBHXp0PBUvXNpVfqjjxbk_07sTUG6w8cY6f/exec?action=dapatkan";
+
+// Fungsi tukar masa 24 jam ke 12 jam AM/PM
+function formatMasa(masa24) {
+  let [jam, minit] = masa24.split(":");
+  jam = parseInt(jam);
+  let ampm = jam >= 12 ? 'PM' : 'AM';
+  jam = jam % 12;
+  if (jam === 0) jam = 12;
+  return jam + ":" + minit + " " + ampm;
+}
+
+function paparJadual(tempahan) {
+  let tbody = document.getElementById("dataBody");
+  tbody.innerHTML = "";
+
+  if (tempahan.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='8'>Tiada tempahan direkodkan.</td></tr>";
+  } else {
+    tempahan.forEach(item => {
+      let tarikhFormat = new Date(item.tarikh).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.nama}</td>
+          <td>${item.kelas}</td>
+          <td>${tarikhFormat}</td>
+          <td>${formatMasa(item.masaMula)}</td>
+          <td>${formatMasa(item.masaTamat)}</td>
+          <td>${item.tujuan}</td>
+          <td>${item.bilangan}</td>
+          <td><span class="status-tempah">Ditempah</span></td>
+        </tr>`;
+    });
+  }
+
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("jadual").style.display = "table";
+}
+
+function muatSemula() {
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("jadual").style.display = "none";
+
+  fetch(WEB_APP_URL)
+    .then(response => response.json())
+    .then(data => paparJadual(data))
+    .catch(err => {
+      document.getElementById("loading").innerText = "❌ Ralat: " + err;
+    });
+}
+
+// Muat data bila halaman dibuka
+window.onload = muatSemula;
+</script>
+
+</body>
+</html>
